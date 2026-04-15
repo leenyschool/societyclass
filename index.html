@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지구촌 세계시민 뉴스 - 수행평가</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --paper: #f5f0e8;
+    --ink: #1a1a1a;
+    --ink-light: #3a3a3a;
+    --rule: #2a2a2a;
+    --rule-thin: #888;
+    --accent: #8b0000;
+    --accent2: #1a3a6b;
+    --bg: #d8d0c0;
+    --card-bg: #faf6ee;
+    --input-bg: #fffdf7;
+    --shadow: rgba(0,0,0,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── 상단 고정 바 ── */
+  #sticky-bar {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: #2a2a2a;
+    border-bottom: 3px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 20px;
+    flex-wrap: wrap;
+  }
+
+  #sticky-bar .bar-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  #sticky-bar label {
+    color: #ccc;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  #sticky-bar input {
+    background: #3a3a3a;
+    border: 1px solid #555;
+    color: #fff;
+    padding: 6px 10px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    border-radius: 3px;
+    width: 90px;
+    transition: border-color 0.2s;
+  }
+  #sticky-bar input:focus { outline: none; border-color: #e8c87a; }
+  #sticky-bar input#inp-name { width: 80px; }
+
+  #btn-save {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 3px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(139,0,0,0.4);
+    transition: background 0.2s, transform 0.1s;
+  }
+  #btn-save:hover { background: #a00000; transform: translateY(-1px); }
+  #btn-save:active { transform: translateY(0); }
+
+  /* ── 메인 래퍼 ── */
+  #newspaper {
+    max-width: 900px;
+    margin: 24px auto;
+    background: var(--paper);
+    box-shadow: 0 4px 30px var(--shadow);
+    padding: 28px 32px 40px;
+  }
+
+  /* ── 신문 헤더 ── */
+  .np-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 3px solid var(--rule);
+    border-bottom: 1px solid var(--rule-thin);
+    padding: 5px 0;
+    margin-bottom: 4px;
+  }
+  .np-meta span { font-size: 11.5px; font-weight: 500; color: var(--ink-light); letter-spacing: 0.5px; }
+  .np-meta .meta-center { font-size: 11.5px; font-weight: 700; color: var(--ink); text-align: center; flex: 1; }
+
+  .np-masthead {
+    text-align: center;
+    padding: 10px 0 6px;
+    border-bottom: 4px double var(--rule);
+  }
+  .np-masthead h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(28px, 6vw, 52px);
+    font-weight: 900;
+    color: var(--ink);
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+
+  .np-subhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 2px;
+    border-bottom: 2px solid var(--rule);
+    margin-bottom: 6px;
+  }
+  .np-subhead .sub-left { font-size: 11px; color: var(--ink-light); }
+  .np-subhead .sub-right { font-size: 12px; font-weight: 700; color: var(--ink); text-align: right; }
+  .np-subhead .sub-right span { display: block; }
+
+  /* 성취기준 줄 */
+  .achieve-box {
+    background: #eae4d8;
+    border-left: 4px solid var(--accent2);
+    padding: 7px 12px;
+    margin-bottom: 18px;
+  }
+  .achieve-box p {
+    font-size: 10.5px;
+    line-height: 1.7;
+    color: #333;
+  }
+
+  /* ── 섹션 카드 공통 ── */
+  .section-card {
+    background: var(--card-bg);
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .section-head {
+    background: var(--ink);
+    color: #fff;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-head .sec-num {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 2px;
+  }
+  .section-head h2 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .section-head .sec-sub {
+    font-size: 10.5px;
+    color: #bbb;
+    margin-left: auto;
+  }
+
+  .section-body { padding: 14px 16px; }
+
+  /* ── 기사 제목 칸 ── */
+  .article-title-wrap {
+    border-bottom: 3px solid var(--rule);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+  .article-title-label {
+    font-size: 10px;
+    color: var(--rule-thin);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 5px;
+  }
+  #inp-article-title {
+    width: 100%;
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(16px, 3.5vw, 22px);
+    font-weight: 700;
+    border: none;
+    border-bottom: 2px dashed #bbb;
+    background: transparent;
+    color: var(--ink);
+    padding: 4px 0;
+    outline: none;
+  }
+  #inp-article-title::placeholder { color: #bbb; font-weight: 400; }
+
+  .byline {
+    font-size: 11.5px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  /* ── 공통 입력 스타일 ── */
+  textarea, .text-input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    padding: 10px 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    resize: vertical;
+    line-height: 1.8;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent2); }
+  textarea::placeholder { color: #aaa; }
+
+  /* ── 이슈 선정 카드 ── */
+  .issue-notice {
+    background: #fff9e6;
+    border: 1px dashed #d4a800;
+    border-radius: 2px;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    color: #7a5800;
+    margin-top: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .issue-notice::before { content: "★"; flex-shrink: 0; }
+
+  /* ── 지도 섹션 ── */
+  #map-container {
+    position: relative;
+    background: #d4e8f5;
+    border: 1px solid #aac;
+    border-radius: 2px;
+    overflow: hidden;
+    cursor: crosshair;
+    user-select: none;
+  }
+  #map-container svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  #map-container path {
+    fill: #e8e0cc;
+    stroke: #888;
+    stroke-width: 0.5;
+    transition: fill 0.15s;
+  }
+  #map-container path:hover { fill: #c8d8e8; }
+  #map-container path.selected { fill: #8b3030; stroke: #4a0000; stroke-width: 1; }
+  #map-container path.selected:hover { fill: #a03030; }
+
+  .map-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .map-btn {
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 7px 14px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .map-btn:hover { background: var(--accent2); }
+  .map-btn.danger:hover { background: var(--accent); }
+
+  .map-legend {
+    font-size: 11px;
+    color: var(--rule-thin);
+    margin-top: 8px;
+  }
+
+  /* ── 원인 분석 - 2컬럼 ── */
+  .cause-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 600px) { .cause-grid { grid-template-columns: 1fr; } }
+
+  .cause-col-head {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #fff;
+    padding: 5px 10px;
+    margin-bottom: 6px;
+  }
+  .cause-natural .cause-col-head { background: #2a5a2a; }
+  .cause-human .cause-col-head { background: #2a2a6a; }
+
+  .cause-hint {
+    font-size: 10.5px;
+    color: #888;
+    margin-bottom: 5px;
+    font-style: italic;
+  }
+
+  /* ── 해결 방안 - 2컬럼 ── */
+  .solution-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 600px) { .solution-grid { grid-template-columns: 1fr; } }
+
+  .sol-personal .cause-col-head { background: #5a3a2a; }
+  .sol-global .cause-col-head { background: #1a4a3a; }
+
+  /* ── 기사 헤더 구분선 ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--rule-thin);
+    margin: 6px 0 14px;
+  }
+  .divider-thick {
+    border: none;
+    border-top: 2px solid var(--rule);
+    margin: 4px 0;
+  }
+
+  /* ── 저장 오버레이 ── */
+  #save-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #save-overlay.active { display: flex; }
+  #save-overlay .ov-box {
+    background: #fff;
+    padding: 28px 36px;
+    border-radius: 4px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  #save-overlay .ov-box p { font-size: 15px; color: #333; margin-bottom: 8px; }
+  #save-overlay .ov-box small { font-size: 12px; color: #888; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 4px solid #ddd;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── 반응형 ── */
+  @media (max-width: 640px) {
+    #newspaper { padding: 16px 14px 28px; margin: 12px 8px; }
+    .section-head h2 { font-size: 13px; }
+    #sticky-bar { padding: 8px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 상단 고정 바 -->
+<div id="sticky-bar">
+  <div class="bar-inputs">
+    <label>학번</label>
+    <input type="text" id="inp-sid" placeholder="예) 10101" maxlength="10">
+    <label>이름</label>
+    <input type="text" id="inp-name" placeholder="예) 홍길동" maxlength="10">
+  </div>
+  <button id="btn-save" onclick="savePDF()">📰 나의 활동지 PDF로 저장하기</button>
+</div>
+
+<!-- 신문 본문 -->
+<div id="newspaper">
+
+  <!-- 신문 메타 헤더 -->
+  <div class="np-meta">
+    <span>사회 수행평가</span>
+    <span class="meta-center">발행: 중학교 사회 교과</span>
+    <span id="display-date">발행일: </span>
+  </div>
+
+  <!-- 신문 제호 -->
+  <div class="np-masthead">
+    <h1>지구촌 세계시민 뉴스</h1>
+  </div>
+
+  <!-- 서브헤더 -->
+  <div class="np-subhead">
+    <div class="sub-left">중학교 1학년 사회 — 세계 여러 지역의 지리적 이슈 탐구</div>
+    <div class="sub-right">
+      <span id="display-sid">학번: </span>
+      <span id="display-name">이름: </span>
+    </div>
+  </div>
+
+  <!-- 성취기준 -->
+  <div class="achieve-box">
+    <p><strong>[성취기준]</strong></p>
+    <p>• [9사(지리)02-02] 종교와 관련된 아시아의 다양한 문화경관과 생활양식을 파악하고, 세계시민으로서 문화 다양성에 대한 이해와 수용성을 높인다.</p>
+    <p>• [9사(지리)03-03] 지역 간 역학관계에 따른 유럽의 통합과 분리의 움직임이 유럽연합의 변화와 주민 생활에 미치는 영향을 탐색한다.</p>
+    <p>• [9사(지리)06-02] 태평양 지역이 겪고 있는 환경 문제를 조사하고 그 해결에 참여할 수 있는 방안을 제안한다.</p>
+  </div>
+
+  <!-- 기사 제목 -->
+  <div class="article-title-wrap">
+    <div class="article-title-label">나의 뉴스 기사 제목</div>
+    <input type="text" id="inp-article-title" placeholder="기사 제목을 입력하세요 (예: 태평양 섬나라가 사라진다 — 해수면 상승의 위기)">
+  </div>
+
+  <!-- 기자 바이라인 -->
+  <div class="byline" id="display-byline">기자(작성자): &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 작성일: </div>
+
+  <hr class="divider-thick">
+
+  <!-- 섹션 1: 이슈 선정 -->
+  <div class="section-card">
+    <div class="section-head">
+      <span class="sec-num">01</span>
+      <h2>지리적 이슈 선정하기</h2>
+      <span class="sec-sub">수업 시간에 배운 내용 중 한 가지를 선택하세요</span>
+    </div>
+    <div class="section-body">
+      <textarea id="inp-issue" rows="3" placeholder="예) 태평양 지역의 해수면 상승 문제 / 아시아의 종교 갈등 / 유럽연합(EU)의 분리 움직임 / 아마존 열대우림 파괴 등&#10;&#10;내가 선정한 지리적 이슈:"></textarea>
+      <div class="issue-notice">
+        작성한 이슈가 이 수행평가지의 핵심 주제가 됩니다. 선정한 이슈를 바탕으로 아래 모든 항목을 작성해 주세요.
+      </div>
+    </div>
+  </div>
+
+  <!-- 섹션 2: 지도 위치 표기 -->
+  <div class="section-card">
+    <div class="section-head">
+      <span class="sec-num">02</span>
+      <h2>지리적 이슈 위치 표기하기</h2>
+      <span class="sec-sub">지도를 클릭하면 해당 국가가 표시됩니다</span>
+    </div>
+    <div class="section-body">
+      <div id="map-container">
+        <!-- 세계 SVG 백지도 -->
+        <svg id="world-map" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="map-controls">
+        <button class="map-btn" onclick="undoMapSelection()">↩ 되돌리기</button>
+        <button class="map-btn danger" onclick="resetMapSelection()">✕ 초기화</button>
+      </div>
+      <div class="map-legend">※ 지도를 클릭하여 지리적 이슈가 발생하는 국가/지역을 표시하세요. 여러 곳 선택 가능합니다.</div>
+
+      <hr class="divider" style="margin-top:14px">
+
+      <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:5px;">📌 표기한 위치의 국가명 또는 지역명 작성</label>
+      <textarea id="inp-location" rows="2" placeholder="예) 투발루, 키리바시, 마셜 군도 (태평양 소도서 개발도상국)"></textarea>
+    </div>
+  </div>
+
+  <!-- 섹션 3: 원인 분석 -->
+  <div class="section-card">
+    <div class="section-head">
+      <span class="sec-num">03</span>
+      <h2>이슈의 원인 분석하기</h2>
+      <span class="sec-sub">자연적 원인과 인문적 원인으로 나누어 분석</span>
+    </div>
+    <div class="section-body">
+      <div class="cause-grid">
+        <div class="cause-natural">
+          <div class="cause-col-head">🌿 자연적 원인</div>
+          <div class="cause-hint">기후 변화, 지형, 자연환경 등</div>
+          <textarea id="inp-cause-natural" rows="6" placeholder="예) 지구 온난화로 인한 빙하 융해 → 해수면 상승&#10;온실효과로 인한 해수 온도 상승&#10;저지대 지형으로 인한 침수 취약성"></textarea>
+        </div>
+        <div class="cause-human">
+          <div class="cause-col-head">🏭 인문적 원인</div>
+          <div class="cause-hint">인간 활동, 정치, 경제, 문화 등</div>
+          <textarea id="inp-cause-human" rows="6" placeholder="예) 선진국의 화석 연료 과다 사용&#10;개발도상국의 산업화 과정에서의 탄소 배출&#10;국제 기후 협약 이행 부재"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 섹션 4: 영향 분석 -->
+  <div class="section-card">
+    <div class="section-head">
+      <span class="sec-num">04</span>
+      <h2>이슈로 인한 영향 분석하기</h2>
+      <span class="sec-sub">해당 국가 및 지역에 미친 영향을 분석하세요</span>
+    </div>
+    <div class="section-body">
+      <textarea id="inp-impact" rows="7" placeholder="예)&#10;• 국토 침수로 인한 주민 거주지 상실 및 기후 난민 발생&#10;• 식수 부족 및 농경지 염분화로 인한 식량 안보 위협&#10;• 전통 문화·생활양식 소멸 위기&#10;• 국가 소멸 가능성에 따른 국제법적 지위 문제 대두&#10;• 인접 국가 및 지역으로의 환경 난민 유입 증가"></textarea>
+    </div>
+  </div>
+
+  <!-- 섹션 5: 해결 방안 -->
+  <div class="section-card">
+    <div class="section-head">
+      <span class="sec-num">05</span>
+      <h2>세계시민적 해결 방안 제안하기</h2>
+      <span class="sec-sub">개인·국가·국제 차원의 실천 방안을 제안하세요</span>
+    </div>
+    <div class="section-body">
+      <div class="solution-grid">
+        <div class="sol-personal">
+          <div class="cause-col-head">🙋 개인 차원의 실천 방안</div>
+          <div class="cause-hint">일상 속 세계시민으로서의 실천</div>
+          <textarea id="inp-sol-personal" rows="7" placeholder="예)&#10;• 에너지 절약 생활 실천 (대중교통 이용, 전기 절약 등)&#10;• 일회용품 사용 줄이기&#10;• 기후 변화 관련 캠페인 참여&#10;• 피해 지역 지원 모금 활동 참여&#10;• SNS를 통한 문제 인식 확산"></textarea>
+        </div>
+        <div class="sol-global">
+          <div class="cause-col-head">🌐 국가·국제적 차원의 해결 방안</div>
+          <div class="cause-hint">정책, 조약, 국제 협력 등</div>
+          <textarea id="inp-sol-global" rows="7" placeholder="예)&#10;• 파리 협정 이행 강화 및 탄소 배출 감축&#10;• 기후 취약국에 대한 국제 재정 지원&#10;• 유엔 기후 변화 협약(UNFCCC) 참여 확대&#10;• 기후 난민 보호를 위한 국제 법제 마련&#10;• 재생에너지 기술 개발도상국 이전 협력"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 구분선 -->
+  <div style="border-top: 3px double var(--rule); margin-top: 10px; padding-top: 8px; text-align:center;">
+    <span style="font-size:11px; color:#888; font-style:italic;">지구촌 세계시민 뉴스 — 중학교 사회 수행평가 | 본 자료는 교육 목적으로 제작되었습니다.</span>
+  </div>
+
+</div><!-- /newspaper -->
+
+<!-- 저장 오버레이 -->
+<div id="save-overlay">
+  <div class="ov-box">
+    <div class="spinner"></div>
+    <p>PDF를 생성하고 있습니다…</p>
+    <small>잠시만 기다려 주세요.</small>
+  </div>
+</div>
+
+<script>
+/* ── 날짜 초기화 ── */
+(function initDate() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  const dateStr = `${y}년 ${m}월 ${d}일`;
+  document.getElementById('display-date').textContent = '발행일: ' + dateStr;
+  updateByline();
+})();
+
+/* ── 실시간 표시 업데이트 ── */
+function updateDisplays() {
+  const sid = document.getElementById('inp-sid').value || '';
+  const name = document.getElementById('inp-name').value || '';
+  document.getElementById('display-sid').textContent = '학번: ' + (sid || '____');
+  document.getElementById('display-name').textContent = '이름: ' + (name || '____');
+  updateByline();
+}
+
+function updateByline() {
+  const sid = document.getElementById('inp-sid')?.value || '';
+  const name = document.getElementById('inp-name')?.value || '';
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}년 ${String(now.getMonth()+1).padStart(2,'0')}월 ${String(now.getDate()).padStart(2,'0')}일`;
+  const bylineEl = document.getElementById('display-byline');
+  if(bylineEl) bylineEl.textContent = `기자(작성자): ${sid} ${name} | 작성일: ${dateStr}`;
+}
+
+document.getElementById('inp-sid').addEventListener('input', updateDisplays);
+document.getElementById('inp-name').addEventListener('input', updateDisplays);
+
+/* ── 세계 SVG 지도 (Natural Earth 간소화) ── */
+// 간소화된 세계 국가 데이터 (주요 국가 path)
+const countriesData = [
+  // 아시아
+  {id:"CN", name:"중국", d:"M680,140 L720,130 L760,135 L780,155 L775,175 L760,185 L740,190 L720,185 L700,195 L685,180 L675,165 L680,150 Z"},
+  {id:"IN", name:"인도", d:"M660,175 L690,170 L710,185 L715,200 L705,225 L685,240 L665,235 L650,210 L645,190 L655,178 Z"},
+  {id:"JP", name:"일본", d:"M780,150 L790,145 L800,150 L798,160 L788,165 L780,160 Z M795,165 L805,158 L812,163 L808,172 L798,173 Z"},
+  {id:"KR", name:"한국", d:"M763,155 L772,152 L775,160 L768,167 L760,163 Z"},
+  {id:"ID", name:"인도네시아", d:"M720,235 L745,230 L760,235 L758,245 L740,248 L722,245 Z M762,240 L785,235 L795,242 L790,250 L768,252 Z"},
+  {id:"PH", name:"필리핀", d:"M760,195 L770,190 L778,198 L773,210 L763,212 Z"},
+  {id:"VN", name:"베트남", d:"M720,185 L730,180 L735,200 L730,220 L720,215 L715,198 Z"},
+  {id:"TH", name:"태국", d:"M710,185 L720,183 L722,200 L715,215 L707,205 L705,193 Z"},
+  {id:"MM", name:"미얀마", d:"M700,168 L715,165 L718,182 L710,195 L700,188 L695,175 Z"},
+  {id:"BD", name:"방글라데시", d:"M700,185 L710,183 L712,195 L703,198 L697,192 Z"},
+  {id:"PK", name:"파키스탄", d:"M635,155 L660,148 L668,170 L655,180 L635,175 L628,162 Z"},
+  {id:"AF", name:"아프가니스탄", d:"M608,145 L638,140 L645,158 L630,168 L607,162 Z"},
+  {id:"IR", name:"이란", d:"M565,145 L608,140 L613,162 L600,175 L570,172 L558,158 Z"},
+  {id:"SA", name:"사우디아라비아", d:"M545,170 L582,165 L590,185 L575,200 L548,198 L535,182 Z"},
+  {id:"IQ", name:"이라크", d:"M542,148 L562,145 L568,162 L555,173 L538,165 Z"},
+  {id:"SY", name:"시리아", d:"M530,142 L548,140 L552,152 L535,158 L525,150 Z"},
+  {id:"TR", name:"튀르키예", d:"M500,128 L540,125 L545,140 L530,148 L502,145 L492,135 Z"},
+  {id:"KZ", name:"카자흐스탄", d:"M590,100 L660,95 L665,125 L645,135 L605,132 L585,118 Z"},
+  {id:"MN", name:"몽골", d:"M670,100 L730,95 L740,118 L720,125 L672,122 Z"},
+  {id:"RU", name:"러시아", d:"M450,50 L850,40 L870,95 L820,108 L760,100 L700,92 L640,88 L580,92 L530,98 L490,105 L455,95 Z"},
+  // 유럽
+  {id:"FR", name:"프랑스", d:"M440,105 L465,102 L468,120 L455,130 L438,122 Z"},
+  {id:"DE", name:"독일", d:"M468,95 L490,92 L492,112 L475,118 L466,108 Z"},
+  {id:"GB", name:"영국", d:"M420,88 L435,85 L438,100 L428,108 L418,100 Z"},
+  {id:"ES", name:"스페인", d:"M420,115 L455,112 L458,130 L438,138 L418,130 Z"},
+  {id:"IT", name:"이탈리아", d:"M470,115 L488,112 L492,135 L480,145 L468,135 L465,122 Z"},
+  {id:"PL", name:"폴란드", d:"M490,88 L518,85 L520,105 L495,108 Z"},
+  {id:"UA", name:"우크라이나", d:"M518,88 L555,85 L558,108 L522,112 Z"},
+  {id:"SE", name:"스웨덴", d:"M470,60 L488,58 L490,88 L472,90 Z"},
+  {id:"NO", name:"노르웨이", d:"M440,55 L470,52 L472,75 L445,80 Z"},
+  {id:"FI", name:"핀란드", d:"M490,55 L510,52 L515,80 L492,82 Z"},
+  {id:"GR", name:"그리스", d:"M497,128 L515,125 L518,142 L500,148 Z"},
+  // 아프리카
+  {id:"EG", name:"이집트", d:"M520,158 L548,155 L550,180 L522,182 Z"},
+  {id:"LY", name:"리비아", d:"M478,158 L520,155 L522,185 L480,187 Z"},
+  {id:"DZ", name:"알제리", d:"M435,155 L478,152 L480,192 L437,195 Z"},
+  {id:"MA", name:"모로코", d:"M400,148 L435,145 L437,175 L402,178 Z"},
+  {id:"ET", name:"에티오피아", d:"M548,200 L582,196 L585,225 L550,228 Z"},
+  {id:"KE", name:"케냐", d:"M548,225 L575,222 L578,248 L550,250 Z"},
+  {id:"TZ", name:"탄자니아", d:"M540,245 L572,242 L575,268 L542,270 Z"},
+  {id:"ZA", name:"남아프리카", d:"M490,295 L538,290 L542,325 L512,335 L488,318 Z"},
+  {id:"NG", name:"나이지리아", d:"M448,205 L478,202 L480,228 L450,230 Z"},
+  {id:"CD", name:"콩고민주공화국", d:"M490,225 L535,220 L538,260 L492,263 Z"},
+  {id:"SD", name:"수단", d:"M520,175 L555,172 L558,205 L522,208 Z"},
+  {id:"AO", name:"앙골라", d:"M478,258 L512,255 L515,290 L480,292 Z"},
+  {id:"MZ", name:"모잠비크", d:"M535,262 L558,258 L560,295 L537,298 Z"},
+  {id:"GH", name:"가나", d:"M428,212 L448,210 L450,232 L430,234 Z"},
+  {id:"CI", name:"코트디부아르", d:"M415,210 L432,208 L433,228 L417,230 Z"},
+  {id:"ML", name:"말리", d:"M400,175 L440,172 L442,210 L402,213 Z"},
+  {id:"NE", name:"니제르", d:"M440,172 L480,170 L482,205 L442,208 Z"},
+  {id:"TD", name:"차드", d:"M480,170 L522,168 L524,205 L482,208 Z"},
+  {id:"CM", name:"카메룬", d:"M465,205 L488,202 L490,228 L467,230 Z"},
+  // 아메리카
+  {id:"US", name:"미국", d:"M120,95 L280,90 L285,155 L120,160 Z"},
+  {id:"CA", name:"캐나다", d:"M100,40 L310,35 L315,95 L105,100 Z"},
+  {id:"MX", name:"멕시코", d:"M120,155 L195,150 L198,190 L165,205 L120,195 Z"},
+  {id:"BR", name:"브라질", d:"M200,210 L300,205 L305,300 L250,320 L195,295 Z"},
+  {id:"AR", name:"아르헨티나", d:"M200,295 L248,290 L250,370 L215,385 L195,355 Z"},
+  {id:"CO", name:"콜롬비아", d:"M178,210 L210,207 L213,240 L180,242 Z"},
+  {id:"VE", name:"베네수엘라", d:"M195,198 L228,195 L230,215 L197,218 Z"},
+  {id:"PE", name:"페루", d:"M175,240 L212,237 L215,280 L177,283 Z"},
+  {id:"CL", name:"칠레", d:"M195,285 L215,282 L218,370 L197,372 Z"},
+  {id:"BO", name:"볼리비아", d:"M205,270 L240,267 L242,300 L207,303 Z"},
+  {id:"PY", name:"파라과이", d:"M230,285 L255,282 L257,305 L232,308 Z"},
+  {id:"UY", name:"우루과이", d:"M235,305 L255,302 L257,320 L237,322 Z"},
+  {id:"EC", name:"에콰도르", d:"M163,230 L182,228 L184,248 L165,250 Z"},
+  {id:"GY", name:"가이아나", d:"M228,200 L248,198 L250,218 L230,220 Z"},
+  {id:"CU", name:"쿠바", d:"M175,168 L210,165 L212,178 L177,180 Z"},
+  // 오세아니아
+  {id:"AU", name:"호주", d:"M730,270 L840,265 L845,345 L790,360 L728,340 Z"},
+  {id:"NZ", name:"뉴질랜드", d:"M860,320 L878,315 L880,350 L863,355 Z"},
+  {id:"PG", name:"파푸아뉴기니", d:"M790,242 L830,238 L832,262 L792,265 Z"},
+  {id:"FJ", name:"피지", d:"M895,295 L910,292 L912,308 L897,310 Z"},
+  {id:"TV", name:"투발루", d:"M892,270 L900,268 L901,276 L893,277 Z"},
+  {id:"KI", name:"키리바시", d:"M870,255 L882,252 L884,262 L872,264 Z"},
+  {id:"MH", name:"마셜군도", d:"M850,235 L860,232 L862,242 L852,244 Z"},
+  {id:"WS", name:"사모아", d:"M915,275 L924,272 L925,280 L916,282 Z"},
+  {id:"TO", name:"통가", d:"M910,295 L918,292 L919,302 L911,304 Z"},
+  // 기타
+  {id:"GL", name:"그린란드", d:"M300,20 L390,15 L395,60 L302,65 Z"},
+  {id:"IS", name:"아이슬란드", d:"M385,68 L410,65 L412,80 L387,82 Z"},
+  {id:"SG", name:"싱가포르", d:"M735,228 L740,226 L741,231 L736,232 Z"},
+  {id:"LK", name:"스리랑카", d:"M688,218 L697,215 L698,228 L689,230 Z"},
+  {id:"NP", name:"네팔", d:"M672,168 L695,165 L696,174 L673,176 Z"},
+  {id:"UZ", name:"우즈베키스탄", d:"M600,125 L630,122 L632,140 L602,142 Z"},
+  {id:"IL", name:"이스라엘", d:"M524,155 L532,153 L533,163 L525,165 Z"},
+  {id:"JO", name:"요르단", d:"M530,155 L545,153 L546,165 L531,167 Z"},
+  {id:"YE", name:"예멘", d:"M555,185 L592,182 L594,200 L557,202 Z"},
+  {id:"OM", name:"오만", d:"M592,178 L618,175 L620,195 L594,197 Z"},
+  {id:"AE", name:"아랍에미리트", d:"M587,170 L608,167 L610,180 L589,182 Z"},
+  {id:"QA", name:"카타르", d:"M580,173 L588,171 L589,180 L581,181 Z"},
+  {id:"KW", name:"쿠웨이트", d:"M563,163 L572,161 L573,170 L564,171 Z"},
+  {id:"TW", name:"대만", d:"M768,172 L776,170 L777,182 L769,183 Z"},
+  {id:"HK", name:"홍콩", d:"M755,178 L762,176 L763,183 L756,184 Z"},
+  {id:"KP", name:"북한", d:"M758,145 L770,143 L771,155 L759,157 Z"},
+  {id:"LA", name:"라오스", d:"M720,180 L733,178 L734,195 L721,197 Z"},
+  {id:"KH", name:"캄보디아", d:"M720,198 L735,196 L736,210 L721,212 Z"},
+  {id:"MY", name:"말레이시아", d:"M715,220 L745,217 L746,232 L716,234 Z"},
+  {id:"BN", name:"브루나이", d:"M750,225 L758,223 L759,231 L751,232 Z"},
+  {id:"TL", name:"동티모르", d:"M775,248 L790,246 L791,255 L776,257 Z"},
+  // 더 많은 아프리카 국가들
+  {id:"SN", name:"세네갈", d:"M390,190 L410,188 L411,202 L391,204 Z"},
+  {id:"GN", name:"기니", d:"M390,203 L415,201 L416,218 L391,220 Z"},
+  {id:"SL", name:"시에라리온", d:"M398,218 L415,216 L416,228 L399,230 Z"},
+  {id:"LR", name:"라이베리아", d:"M408,228 L425,226 L426,240 L409,242 Z"},
+  {id:"BF", name:"부르키나파소", d:"M425,188 L452,186 L453,205 L426,207 Z"},
+  {id:"TG", name:"토고", d:"M440,205 L448,203 L449,220 L441,222 Z"},
+  {id:"BJ", name:"베냉", d:"M447,202 L458,200 L459,218 L448,220 Z"},
+  {id:"SO", name:"소말리아", d:"M565,200 L595,195 L597,235 L568,238 Z"},
+  {id:"DJ", name:"지부티", d:"M558,195 L568,193 L569,205 L559,207 Z"},
+  {id:"ER", name:"에리트레아", d:"M545,188 L562,185 L563,200 L546,202 Z"},
+  {id:"RW", name:"르완다", d:"M533,245 L543,243 L544,253 L534,255 Z"},
+  {id:"BI", name:"부룬디", d:"M533,253 L542,251 L543,262 L534,264 Z"},
+  {id:"UG", name:"우간다", d:"M535,232 L552,230 L553,247 L536,249 Z"},
+  {id:"ZM", name:"잠비아", d:"M495,262 L532,259 L534,285 L497,288 Z"},
+  {id:"ZW", name:"짐바브웨", d:"M508,283 L538,280 L540,300 L510,303 Z"},
+  {id:"BW", name:"보츠와나", d:"M490,295 L520,292 L522,318 L492,320 Z"},
+  {id:"NA", name:"나미비아", d:"M462,280 L492,277 L494,310 L464,313 Z"},
+  {id:"MW", name:"말라위", d:"M540,262 L552,260 L553,285 L541,287 Z"},
+  // 유럽 추가
+  {id:"BE", name:"벨기에", d:"M453,98 L468,96 L469,108 L454,110 Z"},
+  {id:"NL", name:"네덜란드", d:"M455,88 L470,86 L471,98 L456,100 Z"},
+  {id:"CH", name:"스위스", d:"M462,112 L478,110 L479,122 L463,124 Z"},
+  {id:"AT", name:"오스트리아", d:"M478,108 L500,106 L501,118 L479,120 Z"},
+  {id:"CZ", name:"체코", d:"M482,96 L502,94 L503,108 L483,110 Z"},
+  {id:"SK", name:"슬로바키아", d:"M500,100 L520,98 L521,110 L501,112 Z"},
+  {id:"HU", name:"헝가리", d:"M495,110 L522,108 L523,122 L496,124 Z"},
+  {id:"RO", name:"루마니아", d:"M515,110 L545,108 L546,128 L516,130 Z"},
+  {id:"BG", name:"불가리아", d:"M515,125 L542,123 L543,138 L516,140 Z"},
+  {id:"RS", name:"세르비아", d:"M495,118 L518,116 L519,130 L496,132 Z"},
+  {id:"HR", name:"크로아티아", d:"M476,115 L497,113 L498,126 L477,128 Z"},
+  {id:"BA", name:"보스니아헤르체고비나", d:"M479,122 L498,120 L499,132 L480,134 Z"},
+  {id:"AL", name:"알바니아", d:"M490,132 L500,130 L501,142 L491,144 Z"},
+  {id:"MK", name:"북마케도니아", d:"M497,130 L510,128 L511,138 L498,140 Z"},
+  {id:"DK", name:"덴마크", d:"M468,72 L480,70 L481,82 L469,84 Z"},
+  {id:"LT", name:"리투아니아", d:"M505,78 L520,76 L521,88 L506,90 Z"},
+  {id:"LV", name:"라트비아", d:"M505,68 L522,66 L523,78 L506,80 Z"},
+  {id:"EE", name:"에스토니아", d:"M505,60 L522,58 L523,70 L506,72 Z"},
+  {id:"BY", name:"벨라루스", d:"M515,78 L545,76 L546,95 L516,97 Z"},
+  {id:"MD", name:"몰도바", d:"M535,110 L548,108 L549,120 L536,122 Z"},
+  {id:"PT", name:"포르투갈", d:"M405,118 L422,116 L423,138 L406,140 Z"},
+  {id:"IE", name:"아일랜드", d:"M405,85 L420,83 L421,98 L406,100 Z"},
+  // 중앙아시아·중동 추가
+  {id:"TM", name:"투르크메니스탄", d:"M582,130 L615,128 L616,148 L583,150 Z"},
+  {id:"TJ", name:"타지키스탄", d:"M625,138 L648,136 L649,152 L626,154 Z"},
+  {id:"KG", name:"키르기스스탄", d:"M635,120 L662,118 L663,132 L636,134 Z"},
+  {id:"AZ", name:"아제르바이잔", d:"M560,128 L580,126 L581,140 L561,142 Z"},
+  {id:"GE", name:"조지아", d:"M545,120 L568,118 L569,130 L546,132 Z"},
+  {id:"AM", name:"아르메니아", d:"M558,132 L572,130 L573,140 L559,142 Z"},
+  {id:"LB", name:"레바논", d:"M525,148 L533,146 L534,155 L526,156 Z"},
+  // 남아시아
+  {id:"BT", name:"부탄", d:"M698,162 L712,160 L713,170 L699,172 Z"},
+  {id:"MV", name:"몰디브", d:"M665,240 L672,238 L673,252 L666,253 Z"},
+  // 동남아시아 추가
+  {id:"TL2", name:"동티모르2", d:"M778,250 L792,248 L793,257 L779,259 Z"},
+  // 태평양 추가
+  {id:"PW", name:"팔라우", d:"M808,230 L816,228 L817,236 L809,238 Z"},
+  {id:"FM", name:"미크로네시아", d:"M830,225 L842,222 L843,232 L831,234 Z"},
+  {id:"SB", name:"솔로몬군도", d:"M848,262 L862,260 L863,272 L849,274 Z"},
+  {id:"VU", name:"바누아투", d:"M878,278 L886,276 L887,292 L879,294 Z"},
+  {id:"NC", name:"뉴칼레도니아", d:"M862,295 L878,293 L879,303 L863,305 Z"},
+  // 카리브해
+  {id:"HT", name:"아이티", d:"M195,178 L208,176 L209,188 L196,190 Z"},
+  {id:"DO", name:"도미니카공화국", d:"M207,177 L218,175 L219,187 L208,189 Z"},
+  {id:"JM", name:"자메이카", d:"M183,178 L196,176 L197,184 L184,186 Z"},
+  {id:"TT", name:"트리니다드토바고", d:"M232,205 L240,203 L241,211 L233,213 Z"},
+  // 중미
+  {id:"GT", name:"과테말라", d:"M145,190 L162,188 L163,202 L146,204 Z"},
+  {id:"BZ", name:"벨리즈", d:"M160,182 L168,180 L169,193 L161,195 Z"},
+  {id:"HN", name:"온두라스", d:"M150,200 L170,198 L171,212 L151,214 Z"},
+  {id:"SV", name:"엘살바도르", d:"M148,210 L162,208 L163,218 L149,220 Z"},
+  {id:"NI", name:"니카라과", d:"M155,215 L175,213 L176,228 L156,230 Z"},
+  {id:"CR", name:"코스타리카", d:"M160,228 L176,226 L177,238 L161,240 Z"},
+  {id:"PA", name:"파나마", d:"M168,236 L187,234 L188,245 L169,247 Z"},
+  // 남아메리카 추가
+  {id:"SR", name:"수리남", d:"M240,205 L258,203 L259,218 L241,220 Z"},
+  {id:"GF", name:"프랑스령기아나", d:"M253,202 L268,200 L269,215 L254,217 Z"},
+  {id:"PY2", name:"파라과이2", d:"M228,290 L252,288 L253,308 L229,310 Z"},
+];
+
+// SVG 지도 생성
+const svg = document.getElementById('world-map');
+
+// 대양 배경
+const ocean = document.createElementNS("http://www.w3.org/2000/svg","rect");
+ocean.setAttribute("width","1000"); ocean.setAttribute("height","500");
+ocean.setAttribute("fill","#b8d4e8");
+svg.appendChild(ocean);
+
+// 국가 paths 생성
+countriesData.forEach(c => {
+  const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("id","country-"+c.id);
+  path.setAttribute("d", c.d);
+  path.setAttribute("data-name", c.name);
+  path.setAttribute("data-id", c.id);
+  path.style.fill = "#e8e0cc";
+  path.style.stroke = "#888";
+  path.style.strokeWidth = "0.5";
+  path.style.cursor = "pointer";
+  path.style.transition = "fill 0.15s";
+  svg.appendChild(path);
+
+  // 호버 효과
+  path.addEventListener('mouseenter', function() {
+    if(!this.classList.contains('selected')) this.style.fill = "#c8d8e8";
+    showTooltip(c.name, event);
+  });
+  path.addEventListener('mouseleave', function() {
+    if(!this.classList.contains('selected')) this.style.fill = "#e8e0cc";
+    hideTooltip();
+  });
+  path.addEventListener('click', function() {
+    toggleCountry(this, c.name);
+  });
+});
+
+// 툴팁
+const tooltip = document.createElement('div');
+tooltip.id = 'map-tooltip';
+tooltip.style.cssText = 'position:fixed;background:#222;color:#fff;padding:3px 9px;border-radius:3px;font-size:11px;pointer-events:none;display:none;z-index:100;font-family:Noto Sans KR,sans-serif;';
+document.body.appendChild(tooltip);
+
+function showTooltip(name, e) {
+  tooltip.textContent = name;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (e.clientX+12)+'px';
+  tooltip.style.top = (e.clientY-28)+'px';
+}
+document.addEventListener('mousemove', function(e) {
+  if(tooltip.style.display==='block') {
+    tooltip.style.left=(e.clientX+12)+'px';
+    tooltip.style.top=(e.clientY-28)+'px';
+  }
+});
+function hideTooltip() { tooltip.style.display='none'; }
+
+// 지도 선택 로직
+let selectedHistory = [];
+
+function toggleCountry(el, name) {
+  if(el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    el.style.fill = "#e8e0cc";
+    selectedHistory = selectedHistory.filter(e => e !== el);
+  } else {
+    el.classList.add('selected');
+    el.style.fill = "#8b3030";
+    selectedHistory.push(el);
+  }
+}
+
+function undoMapSelection() {
+  if(selectedHistory.length > 0) {
+    const last = selectedHistory.pop();
+    last.classList.remove('selected');
+    last.style.fill = "#e8e0cc";
+  }
+}
+
+function resetMapSelection() {
+  selectedHistory.forEach(el => {
+    el.classList.remove('selected');
+    el.style.fill = "#e8e0cc";
+  });
+  selectedHistory = [];
+}
+
+/* ── PDF 저장 ── */
+async function savePDF() {
+  const sid = document.getElementById('inp-sid').value.trim() || '학번';
+  const name = document.getElementById('inp-name').value.trim() || '이름';
+  const overlay = document.getElementById('save-overlay');
+  overlay.classList.add('active');
+
+  // 툴팁 숨기기
+  tooltip.style.display = 'none';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const el = document.getElementById('newspaper');
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#f5f0e8',
+      logging: false
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
+    const imgW = canvas.width;
+    const imgH = canvas.height;
+    const ratio = imgW / imgH;
+    const pageRatio = pdfW / pdfH;
+
+    let x = 0, y = 0, w = pdfW, h = pdfH;
+    if(ratio > pageRatio) {
+      h = pdfW / ratio;
+      y = (pdfH - h) / 2;
+    } else {
+      w = pdfH * ratio;
+      x = (pdfW - w) / 2;
+    }
+
+    // 여러 페이지 처리
+    const pageHeightPx = Math.floor(imgH * (pdfH / (imgH * pdfW / imgW)));
+    const totalPages = Math.ceil(imgH / (imgW * pdfH / pdfW));
+
+    if(totalPages <= 1) {
+      pdf.addImage(imgData, 'JPEG', x, y, w, h);
+    } else {
+      const sliceH = Math.floor(imgW * pdfH / pdfW);
+      for(let i = 0; i < totalPages; i++) {
+        if(i > 0) pdf.addPage();
+        const srcY = i * sliceH;
+        const remaining = imgH - srcY;
+        const thisH = Math.min(sliceH, remaining);
+
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = imgW;
+        pageCanvas.height = sliceH;
+        const ctx = pageCanvas.getContext('2d');
+        ctx.fillStyle = '#f5f0e8';
+        ctx.fillRect(0,0,imgW,sliceH);
+        ctx.drawImage(canvas, 0, srcY, imgW, thisH, 0, 0, imgW, thisH);
+
+        const pageImg = pageCanvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(pageImg, 'JPEG', 0, 0, pdfW, pdfH);
+      }
+    }
+
+    const filename = `지구촌 세계시민 뉴스_${sid}_${name}.pdf`;
+    pdf.save(filename);
+  } catch(err) {
+    console.error(err);
+    alert('PDF 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+  } finally {
+    overlay.classList.remove('active');
+  }
+}
+
+/* ── 초기 표시 업데이트 ── */
+updateDisplays();
+</script>
+</body>
+</html>
